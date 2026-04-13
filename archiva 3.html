@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Archiva</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fafaf8;--surface:#ffffff;--surface2:#f4f3f0;--surface3:#eceae5;
+  --border:#e5e3de;--border2:#d4d1ca;
+  --ink:#18170f;--ink2:#5a5950;--ink3:#9a9890;
+  --sage:#4a7c59;--sage-bg:#eef4f0;
+  --clay:#c4622d;--clay-bg:#fdf1eb;
+  --sky:#2563a8;--sky-bg:#edf3fb;
+  --gold:#b8860b;--gold-bg:#fdf8e8;
+  --r:6px;--r2:10px;--r3:14px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#121210;--surface:#1a1a17;--surface2:#222220;--surface3:#2a2a27;
+  --border:#2e2e2a;--border2:#3a3a35;
+  --ink:#f0efe8;--ink2:#8a8a80;--ink3:#4a4a45;
+  --sage-bg:#1a2b20;--clay-bg:#2b1a13;--sky-bg:#121f30;--gold-bg:#2b2510;
+}}
+body{background:var(--bg);color:var(--ink);font-family:'Geist',sans-serif;font-size:14px;min-height:100vh;display:flex;flex-direction:column}
+
+/* ─── AUTH SCREEN ─── */
+#authScreen{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r3);padding:40px 36px;max-width:380px;width:100%;text-align:center}
+.auth-logo{font-family:'Lora',serif;font-size:28px;font-weight:400;letter-spacing:-0.02em;margin-bottom:6px}
+.auth-tagline{font-size:13px;color:var(--ink2);margin-bottom:32px;line-height:1.5}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;font-size:12px;color:var(--ink3)}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.google-btn{width:100%;padding:11px 16px;border-radius:var(--r2);border:1px solid var(--border2);background:var(--surface2);color:var(--ink);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .15s}
+.google-btn:hover{border-color:var(--border2);background:var(--surface3)}
+.email-input{width:100%;padding:10px 13px;border-radius:var(--r2);border:1px solid var(--border2);background:var(--surface2);color:var(--ink);font-size:13px;font-family:inherit;margin-bottom:8px;transition:border-color .15s}
+.email-input:focus{outline:none;border-color:var(--ink)}
+.email-input::placeholder{color:var(--ink3)}
+.auth-btn{width:100%;padding:10px 16px;border-radius:var(--r2);border:none;background:var(--ink);color:var(--bg);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:opacity .15s;margin-bottom:8px}
+.auth-btn:hover{opacity:.85}
+.auth-switch{font-size:12px;color:var(--ink2);cursor:pointer;margin-top:10px}
+.auth-switch span{color:var(--ink);text-decoration:underline;cursor:pointer}
+.auth-error{font-size:12px;color:var(--clay);margin-top:8px;min-height:18px}
+
+/* ─── APP SHELL ─── */
+#appShell{flex:1;display:none;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{display:flex;align-items:center;gap:12px;padding:0 20px;height:50px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface)}
+.logo{font-family:'Lora',serif;font-size:17px;font-weight:400;letter-spacing:-0.01em;display:flex;align-items:center;gap:8px}
+.logo-mark{width:22px;height:22px;border:1.5px solid var(--ink);border-radius:5px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:11px;height:11px;stroke:var(--ink);fill:none;stroke-width:2}
+.nav{display:flex;gap:1px;margin:0 auto}
+.nav-btn{padding:5px 14px;border-radius:var(--r);border:none;background:none;color:var(--ink2);font-size:13px;cursor:pointer;font-family:inherit;font-weight:400;transition:all .15s}
+.nav-btn:hover{background:var(--surface2);color:var(--ink)}
+.nav-btn.on{background:var(--surface2);color:var(--ink);font-weight:500}
+.user-area{display:flex;align-items:center;gap:8px;margin-left:auto}
+.user-avatar{width:26px;height:26px;border-radius:50%;background:var(--surface3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;overflow:hidden;flex-shrink:0}
+.user-avatar img{width:100%;height:100%;object-fit:cover}
+.sync-pill{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink3)}
+.sync-dot{width:5px;height:5px;border-radius:50%;background:var(--ink3);transition:background .3s}
+.sync-dot.ok{background:var(--sage)}
+.sync-dot.busy{background:var(--gold);animation:blink .9s infinite}
+.sync-dot.err{background:var(--clay)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.sign-out-btn{padding:4px 10px;border-radius:var(--r);border:1px solid var(--border);background:none;color:var(--ink2);font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s}
+.sign-out-btn:hover{background:var(--surface2);color:var(--ink)}
+
+/* ─── MAIN PANELS ─── */
+.main{flex:1;overflow:hidden;position:relative}
+.panel{position:absolute;inset:0;overflow-y:auto;padding:24px 20px;display:none}
+.panel.on{display:block}
+.pg-title{font-family:'Lora',serif;font-size:22px;font-weight:400;margin-bottom:3px}
+.pg-sub{font-size:13px;color:var(--ink2);margin-bottom:20px}
+.sec-lbl{font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em;font-weight:500;margin-bottom:9px}
+
+/* ─── UPLOAD ─── */
+.dropzone{border:1.5px dashed var(--border2);border-radius:var(--r3);padding:44px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface)}
+.dropzone:hover,.dropzone.over{border-color:var(--ink);background:var(--surface2)}
+.dz-icon{width:42px;height:42px;margin:0 auto 14px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+.dz-icon svg{stroke:var(--ink2);fill:none;stroke-width:1.5;width:18px;height:18px}
+input[type=file]{display:none}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px;margin-top:14px}
+.prev-img{max-width:100%;max-height:200px;border-radius:var(--r);object-fit:contain;border:1px solid var(--border);display:block}
+.note-box{padding:10px 13px;background:var(--surface2);border-radius:var(--r);color:var(--ink2);font-size:13px;line-height:1.5}
+.btn-row{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
+button{padding:7px 15px;border-radius:var(--r);border:1px solid var(--border2);background:var(--surface2);color:var(--ink);font-size:13px;cursor:pointer;font-family:inherit;font-weight:400;transition:all .15s}
+button:hover{background:var(--surface3)}
+button:disabled{opacity:.38;cursor:not-allowed}
+.btn-p{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:500}
+.btn-p:hover{opacity:.85;background:var(--ink)}
+
+.spin{display:flex;align-items:center;gap:8px;color:var(--ink2);padding:18px 0;font-size:13px}
+.d{width:5px;height:5px;border-radius:50%;background:var(--ink3);animation:pulse 1.2s ease infinite}
+.d:nth-child(2){animation-delay:.2s}.d:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+.res-head{display:flex;align-items:flex-start;gap:11px;margin-bottom:13px}
+.cat-chip{width:36px;height:36px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.res-title{font-size:14px;font-weight:500;line-height:1.3}
+.res-meta{font-size:11px;color:var(--ink3);margin-top:3px}
+.res-amount{margin-left:auto;font-family:'Lora',serif;font-size:20px;color:var(--sage);font-style:italic}
+.res-sum{font-size:13px;color:var(--ink2);line-height:1.7}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:9px}
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--surface2);color:var(--ink2);border:1px solid var(--border)}
+
+/* ─── BROWSE ─── */
+.stats-row{display:flex;gap:8px;margin-bottom:20px}
+.stat-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px}
+.stat-n{font-family:'Lora',serif;font-size:24px;font-weight:400;color:var(--ink)}
+.stat-l{font-size:11px;color:var(--ink2);margin-top:1px}
+
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:6px;margin-bottom:20px}
+.cat-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:12px 6px;text-align:center;cursor:pointer;transition:all .15s;position:relative}
+.cat-tile:hover{border-color:var(--border2);background:var(--surface2)}
+.cat-tile.sel{border-color:var(--ink);background:var(--surface2)}
+.cat-tile.sel::after{content:'';position:absolute;top:-1px;left:-1px;right:-1px;bottom:-1px;border:1.5px solid var(--ink);border-radius:var(--r2);pointer-events:none}
+.cat-em{font-size:20px;margin-bottom:4px}
+.cat-lbl{font-size:10px;color:var(--ink2);font-weight:500;letter-spacing:.01em}
+.cat-ct{font-size:10px;color:var(--ink3);margin-top:1px}
+
+.entry{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:13px 15px;margin-bottom:6px;display:flex;gap:10px;align-items:flex-start;position:relative;transition:border-color .15s}
+.entry:hover{border-color:var(--border2)}
+.e-em{font-size:19px;flex-shrink:0;margin-top:1px}
+.e-body{flex:1;min-width:0}
+.e-title{font-size:13px;font-weight:500;line-height:1.3}
+.e-amt{font-family:'Lora',serif;font-size:14px;color:var(--sage);margin-top:2px;font-style:italic}
+.e-meta{font-size:11px;color:var(--ink3);margin-top:2px}
+.e-sum{font-size:12px;color:var(--ink2);margin-top:5px;line-height:1.6}
+.del-btn{position:absolute;top:9px;right:9px;background:none;border:none;color:var(--ink3);cursor:pointer;font-size:14px;padding:3px 6px;border-radius:var(--r);transition:all .15s;line-height:1}
+.del-btn:hover{color:var(--clay);background:var(--clay-bg)}
+.empty{text-align:center;padding:44px 0;color:var(--ink3);font-size:13px}
+
+/* ─── QUERY ─── */
+.q-wrap{position:relative;margin-bottom:12px}
+.q-in{width:100%;padding:12px 96px 12px 14px;border-radius:var(--r2);border:1px solid var(--border2);background:var(--surface);color:var(--ink);font-size:13px;font-family:inherit;resize:none;height:54px;line-height:1.5;transition:border-color .15s}
+.q-in:focus{outline:none;border-color:var(--ink)}
+.q-in::placeholder{color:var(--ink3)}
+.ask-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);padding:6px 12px;font-size:12px}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:20px}
+.chip{padding:5px 12px;border-radius:99px;border:1px solid var(--border);background:var(--surface);color:var(--ink2);font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s}
+.chip:hover{border-color:var(--border2);background:var(--surface2);color:var(--ink)}
+.ans-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px;font-size:13px;color:var(--ink);line-height:1.8;white-space:pre-wrap}
+
+/* ─── SETUP BANNER ─── */
+.setup-banner{background:var(--sky-bg);border:1px solid var(--sky);border-radius:var(--r2);padding:14px 16px;margin-bottom:18px;font-size:13px;color:var(--sky);display:none}
+.setup-banner.show{display:block}
+.setup-banner a{color:var(--sky);font-weight:500}
+.setup-banner code{background:rgba(37,99,168,.1);padding:1px 5px;border-radius:3px;font-size:12px}
+</style>
+</head>
+<body>
+
+<!-- ═══ AUTH SCREEN ═══ -->
+<div id="authScreen">
+  <div class="auth-card">
+    <div class="auth-logo">Archiva</div>
+    <div class="auth-tagline">Your personal document vault.<br>AI-powered. Cloud-synced.</div>
+
+    <button class="google-btn" onclick="signInGoogle()">
+      <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+
+    <div class="auth-divider">or use email</div>
+
+    <input class="email-input" id="authEmail" type="email" placeholder="you@example.com">
+    <input class="email-input" id="authPass" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')submitEmail()">
+    <button class="auth-btn" onclick="submitEmail()" id="emailBtn">Sign in</button>
+    <div class="auth-switch" id="authSwitch">No account? <span onclick="toggleMode()">Create one</span></div>
+    <div class="auth-error" id="authError"></div>
+  </div>
+</div>
+
+<!-- ═══ APP SHELL ═══ -->
+<div id="appShell">
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      Archiva
+    </div>
+    <div class="nav">
+      <button class="nav-btn on" onclick="goTab('upload')">Upload</button>
+      <button class="nav-btn" onclick="goTab('browse')">Browse</button>
+      <button class="nav-btn" onclick="goTab('query')">Query</button>
+    </div>
+    <div class="user-area">
+      <div class="sync-pill"><div class="sync-dot busy" id="syncDot"></div><span id="syncLbl">Syncing</span></div>
+      <div class="user-avatar" id="userAvatar"></div>
+      <button class="sign-out-btn" onclick="doSignOut()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- UPLOAD -->
+    <div class="panel on" id="pUpload">
+      <div class="setup-banner" id="setupBanner">
+        <strong>Firebase setup needed.</strong> Open this file in a text editor and replace the <code>firebaseConfig</code> values at the bottom with your own Firebase project credentials.
+        <a href="https://console.firebase.google.com" target="_blank">Get them at console.firebase.google.com →</a>
+      </div>
+      <div class="pg-title">Upload document</div>
+      <div class="pg-sub">Drop a receipt or scan — AI will read and categorize it instantly</div>
+      <div class="dropzone" id="dz"
+        onclick="document.getElementById('fi').click()"
+        ondragover="event.preventDefault();this.classList.add('over')"
+        ondragleave="this.classList.remove('over')"
+        ondrop="handleDrop(event)">
+        <div class="dz-icon"><svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg></div>
+        <div style="font-size:14px;font-weight:500;margin-bottom:4px">Drop file here or click to browse</div>
+        <div style="font-size:12px;color:var(--ink2)">JPG · PNG · WEBP · PDF</div>
+      </div>
+      <input type="file" id="fi" accept="image/*,application/pdf" onchange="pickFile(event)">
+      <div id="prevCard" style="display:none">
+        <div class="card">
+          <div class="sec-lbl">Preview</div>
+          <img id="prevImg" class="prev-img" style="display:none">
+          <div id="pdfNote" class="note-box" style="display:none">📄 PDF selected — click Analyze to continue</div>
+          <div class="btn-row">
+            <button class="btn-p" onclick="doAnalyze()">Analyze with AI</button>
+            <button onclick="clearFile()">Clear</button>
+          </div>
+        </div>
+      </div>
+      <div id="spinDiv" style="display:none"><div class="spin"><div class="d"></div><div class="d"></div><div class="d"></div><span>Analyzing document...</span></div></div>
+      <div id="resCard" style="display:none">
+        <div class="card">
+          <div class="sec-lbl">Result</div>
+          <div id="resInner"></div>
+          <div class="btn-row">
+            <button class="btn-p" id="saveBtn" onclick="saveEntry()">Save to cloud</button>
+            <button onclick="resetAll()">Start over</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BROWSE -->
+    <div class="panel" id="pBrowse">
+      <div class="pg-title">Your library</div>
+      <div id="statsRow" class="stats-row"></div>
+      <div class="sec-lbl">Filter by category</div>
+      <div class="cat-grid" id="catGrid"></div>
+      <div id="entryList"></div>
+    </div>
+
+    <!-- QUERY -->
+    <div class="panel" id="pQuery">
+      <div class="pg-title">Ask your assistant</div>
+      <div class="pg-sub">Query your document library in plain English</div>
+      <div class="q-wrap">
+        <textarea class="q-in" id="qIn" placeholder='e.g. "Latest health receipts" or "How much did I spend on auto last month?"'></textarea>
+        <button class="btn-p ask-btn" onclick="doAsk()">Ask →</button>
+      </div>
+      <div class="chips">
+        <div class="chip" onclick="quickAsk('Show my latest health documents')">🏥 Health</div>
+        <div class="chip" onclick="quickAsk('Show my auto documents')">🚗 Auto</div>
+        <div class="chip" onclick="quickAsk('What insurance documents do I have?')">🛡️ Insurance</div>
+        <div class="chip" onclick="quickAsk('Summarize my total spending across all categories')">💰 Spending</div>
+        <div class="chip" onclick="quickAsk('Show my 5 most recent documents')">🕐 Recent</div>
+      </div>
+      <div id="qSpin" style="display:none"><div class="spin"><div class="d"></div><div class="d"></div><div class="d"></div><span>Searching library...</span></div></div>
+      <div id="qAns" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+/* ════════════════════════════════════════════════
+   🔥 REPLACE THIS WITH YOUR FIREBASE CONFIG
+   Get it from: https://console.firebase.google.com
+   Project Settings → Your apps → SDK setup
+════════════════════════════════════════════════ */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+/* ════════════════════════════════════════════════ */
+
+const isConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
+
+let app, auth, db, currentUser = null, unsubscribe = null;
+
+if(isConfigured){
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  onAuthStateChanged(auth, user => {
+    if(user){ currentUser = user; showApp(user); }
+    else { currentUser = null; showAuth(); }
+  });
+} else {
+  // Demo mode: no Firebase, use localStorage
+  showApp(null);
+  document.getElementById('setupBanner').classList.add('show');
+}
+
+/* ─── Auth UI ─── */
+let isSignUp = false;
+window.toggleMode = () => {
+  isSignUp = !isSignUp;
+  document.getElementById('emailBtn').textContent = isSignUp ? 'Create account' : 'Sign in';
+  document.getElementById('authSwitch').innerHTML = isSignUp
+    ? 'Have an account? <span onclick="toggleMode()">Sign in</span>'
+    : 'No account? <span onclick="toggleMode()">Create one</span>';
+  document.getElementById('authError').textContent = '';
+};
+
+window.signInGoogle = async () => {
+  if(!isConfigured){ showApp(null); return; }
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  } catch(e){ document.getElementById('authError').textContent = e.message; }
+};
+
+window.submitEmail = async () => {
+  if(!isConfigured){ showApp(null); return; }
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value;
+  if(!email||!pass){ document.getElementById('authError').textContent='Please fill in both fields.'; return; }
+  try {
+    if(isSignUp) await createUserWithEmailAndPassword(auth, email, pass);
+    else await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e){
+    const msgs = {'auth/wrong-password':'Incorrect password.','auth/user-not-found':'No account found.','auth/email-already-in-use':'Email already in use.','auth/weak-password':'Password needs 6+ characters.'};
+    document.getElementById('authError').textContent = msgs[e.code] || e.message;
+  }
+};
+
+window.doSignOut = async () => {
+  if(isConfigured){ if(unsubscribe) unsubscribe(); await signOut(auth); }
+  else showAuth();
+};
+
+function showAuth(){
+  document.getElementById('authScreen').style.display='flex';
+  document.getElementById('appShell').style.display='none';
+}
+function showApp(user){
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('appShell').style.display='flex';
+  if(user){
+    const av = document.getElementById('userAvatar');
+    if(user.photoURL){ av.innerHTML=`<img src="${user.photoURL}">`; }
+    else { av.textContent=(user.email||'?')[0].toUpperCase(); }
+  }
+  startSync();
+}
+
+/* ─── Data ─── */
+const CATS=[
+  {id:'health',label:'Health',em:'🏥'},{id:'auto',label:'Auto',em:'🚗'},
+  {id:'insurance',label:'Insurance',em:'🛡️'},{id:'utilities',label:'Utilities',em:'💡'},
+  {id:'food',label:'Food',em:'🍔'},{id:'finance',label:'Finance',em:'💰'},
+  {id:'home',label:'Home',em:'🏠'},{id:'travel',label:'Travel',em:'✈️'},
+  {id:'education',label:'Education',em:'📚'},{id:'other',label:'Other',em:'📎'},
+];
+const CM = Object.fromEntries(CATS.map(c=>[c.id,c]));
+const LS_KEY = 'archiva_demo_docs';
+
+let docs=[], file=null, b64=null, mime=null, pending=null, selCat=null;
+
+function getCollectionPath(){ return currentUser ? `users/${currentUser.uid}/documents` : null; }
+
+function startSync(){
+  if(!isConfigured || !currentUser){
+    try{ docs=JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch(e){docs=[];}
+    setSync('ok','Local'); return;
+  }
+  setSync('busy','Syncing');
+  const colRef = collection(db, getCollectionPath());
+  const q = query(colRef, orderBy('savedAt','desc'));
+  unsubscribe = onSnapshot(q, snap => {
+    docs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    setSync('ok','Synced');
+    if(document.getElementById('pBrowse').classList.contains('on')) renderBrowse();
+  }, ()=>setSync('err','Error'));
+}
+
+async function persistEntry(entry){
+  if(!isConfigured || !currentUser){
+    docs.unshift({...entry, id: Date.now().toString()});
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(docs)); }catch(e){}
+    setSync('ok','Local');
+    return;
+  }
+  setSync('busy','Saving');
+  const {id:_, ...data} = entry;
+  await addDoc(collection(db, getCollectionPath()), data);
+}
+
+async function removeEntry(id){
+  if(!isConfigured || !currentUser){
+    docs = docs.filter(d=>d.id!=id);
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(docs)); }catch(e){}
+    setSync('ok','Local'); renderBrowse(); return;
+  }
+  setSync('busy','Deleting');
+  await deleteDoc(doc(db, getCollectionPath(), id));
+}
+
+function setSync(s,lbl){
+  const states={ok:'ok',busy:'busy',err:'err'};
+  document.getElementById('syncDot').className='sync-dot '+(states[s]||'');
+  document.getElementById('syncLbl').textContent=lbl;
+}
+
+/* ─── Navigation ─── */
+window.goTab = t => {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('p'+t[0].toUpperCase()+t.slice(1)).classList.add('on');
+  document.querySelectorAll('.nav-btn').forEach(b=>{ if(b.textContent.trim().toLowerCase()===t) b.classList.add('on'); });
+  if(t==='browse') renderBrowse();
+};
+
+/* ─── File handling ─── */
+window.pickFile = e => { const f=e.target.files[0]; if(f) loadFile(f); };
+window.handleDrop = e => { e.preventDefault(); document.getElementById('dz').classList.remove('over'); const f=e.dataTransfer.files[0]; if(f) loadFile(f); };
+function loadFile(f){
+  file=f; mime=f.type;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const d=ev.target.result; b64=d.split(',')[1];
+    document.getElementById('prevCard').style.display='block';
+    document.getElementById('resCard').style.display='none';
+    if(f.type.startsWith('image/')){ document.getElementById('prevImg').src=d; document.getElementById('prevImg').style.display='block'; document.getElementById('pdfNote').style.display='none'; }
+    else{ document.getElementById('prevImg').style.display='none'; document.getElementById('pdfNote').style.display='block'; }
+  };
+  r.readAsDataURL(f);
+}
+
+/* ─── AI Analysis ─── */
+window.doAnalyze = async () => {
+  if(!file) return;
+  document.getElementById('prevCard').style.display='none';
+  document.getElementById('spinDiv').style.display='block';
+  document.getElementById('resCard').style.display='none';
+  const catIds = CATS.map(c=>c.id).join(', ');
+  const prompt = `You are a document categorization assistant. Analyze this document or receipt carefully. Respond ONLY with a valid JSON object — no markdown, no explanation, nothing else:\n{"category":"<one of: ${catIds}>","title":"<descriptive title max 6 words>","date":"<detected date YYYY-MM-DD, or today if not found>","amount":"<dollar amount with $ sign if this is a receipt/invoice, else null>","vendor":"<vendor or provider name if found, else null>","summary":"<2-3 sentence description of this document>","tags":["tag1","tag2","tag3"]}`;
+  let messages;
+  if(file.type.startsWith('image/')){ messages=[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mime,data:b64}},{type:'text',text:prompt}]}]; }
+  else{ messages=[{role:'user',content:`User uploaded a PDF. ${prompt}`}]; }
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:700,messages})});
+    const data=await res.json();
+    const txt=data.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim();
+    pending=JSON.parse(txt); showResult(pending);
+  }catch(err){
+    document.getElementById('spinDiv').style.display='none';
+    document.getElementById('resCard').style.display='block';
+    document.getElementById('resInner').innerHTML='<div style="color:var(--clay);font-size:13px">Analysis failed — please try again.</div>';
+  }
+};
+
+function showResult(r){
+  document.getElementById('spinDiv').style.display='none';
+  document.getElementById('resCard').style.display='block';
+  const cat=CM[r.category]||CM['other'];
+  const tags=(r.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('');
+  document.getElementById('resInner').innerHTML=`
+    <div class="res-head">
+      <div class="cat-chip">${cat.em}</div>
+      <div style="flex:1"><div class="res-title">${r.title}</div><div class="res-meta">${cat.label} · ${r.date}${r.vendor?' · '+r.vendor:''}</div></div>
+      ${r.amount?`<div class="res-amount">${r.amount}</div>`:''}
+    </div>
+    <div class="res-sum">${r.summary}</div>
+    <div class="tags">${tags}</div>`;
+}
+
+window.saveEntry = async () => {
+  if(!pending) return;
+  const btn=document.getElementById('saveBtn');
+  btn.disabled=true; btn.textContent='Saving...';
+  await persistEntry({...pending, savedAt:new Date().toISOString()});
+  btn.textContent='Saved!';
+  setTimeout(resetAll, 1200);
+};
+
+window.clearFile = () => { file=null; b64=null; mime=null; document.getElementById('prevCard').style.display='none'; document.getElementById('fi').value=''; };
+window.resetAll = () => { clearFile(); pending=null; document.getElementById('resCard').style.display='none'; document.getElementById('spinDiv').style.display='none'; const b=document.getElementById('saveBtn'); if(b){b.disabled=false;b.textContent='Save to cloud';} };
+
+/* ─── Browse ─── */
+function renderBrowse(){
+  const total=docs.length;
+  const numCats=[...new Set(docs.map(d=>d.category))].length;
+  const amts=docs.filter(d=>d.amount).map(d=>parseFloat((d.amount||'').replace(/[^0-9.]/g,''))||0);
+  const tot=amts.reduce((a,v)=>a+v,0);
+  document.getElementById('statsRow').innerHTML=
+    `<div class="stat-card"><div class="stat-n">${total}</div><div class="stat-l">Documents</div></div>`+
+    `<div class="stat-card"><div class="stat-n">${numCats}</div><div class="stat-l">Categories</div></div>`+
+    (tot>0?`<div class="stat-card"><div class="stat-n">$${Math.round(tot).toLocaleString()}</div><div class="stat-l">Tracked spend</div></div>`:'');
+
+  document.getElementById('catGrid').innerHTML=CATS.map(c=>{
+    const n=docs.filter(d=>d.category===c.id).length;
+    return `<div class="cat-tile${selCat===c.id?' sel':''}" onclick="toggleCat('${c.id}')"><div class="cat-em">${c.em}</div><div class="cat-lbl">${c.label}</div><div class="cat-ct">${n}</div></div>`;
+  }).join('');
+
+  const filtered=selCat?docs.filter(d=>d.category===selCat):docs;
+  const lbl=selCat?(CM[selCat]||{}).label+' documents':'All documents';
+  if(!filtered.length){ document.getElementById('entryList').innerHTML=`<div class="empty">No documents yet${selCat?' in this category':''}</div>`; return; }
+  document.getElementById('entryList').innerHTML=`<div class="sec-lbl" style="margin-bottom:10px">${lbl} (${filtered.length})</div>`+
+    filtered.slice(0,30).map(d=>{
+      const cat=CM[d.category]||CM['other'];
+      const tags=(d.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('');
+      return `<div class="entry"><div class="e-em">${cat.em}</div><div class="e-body">
+        <div class="e-title">${d.title}</div>
+        ${d.amount?`<div class="e-amt">${d.amount}</div>`:''}
+        <div class="e-meta">${cat.label} · ${d.date}${d.vendor?' · '+d.vendor:''}</div>
+        <div class="e-sum">${d.summary}</div>
+        <div class="tags" style="margin-top:7px">${tags}</div>
+      </div><button class="del-btn" onclick="delEntry('${d.id}')">✕</button></div>`;
+    }).join('');
+}
+
+window.toggleCat = id => { selCat=selCat===id?null:id; renderBrowse(); };
+window.delEntry = async id => { if(!confirm('Delete this document?')) return; await removeEntry(id); };
+
+/* ─── Query ─── */
+window.quickAsk = q => { document.getElementById('qIn').value=q; doAsk(); };
+window.doAsk = async () => {
+  const q=document.getElementById('qIn').value.trim();
+  if(!q) return;
+  document.getElementById('qSpin').style.display='block';
+  document.getElementById('qAns').style.display='none';
+  const lib=docs.length?docs.slice(0,40).map(d=>`[${d.category}] ${d.title} | ${d.date}${d.amount?' | '+d.amount:''}${d.vendor?' | '+d.vendor:''} | ${d.summary.slice(0,100)}`).join('\n'):'No documents saved yet.';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`You are a personal document assistant. Library:\n\n${lib}\n\nQuery: "${q}"\n\nAnswer helpfully and concisely.`}]})});
+    const data=await res.json();
+    const txt=data.content.map(i=>i.text||'').join('');
+    document.getElementById('qSpin').style.display='none';
+    document.getElementById('qAns').style.display='block';
+    document.getElementById('qAns').innerHTML=`<div class="ans-box">${txt}</div>`;
+  }catch(e){
+    document.getElementById('qSpin').style.display='none';
+    document.getElementById('qAns').style.display='block';
+    document.getElementById('qAns').innerHTML=`<div class="ans-box" style="color:var(--clay)">Query failed — please try again.</div>`;
+  }
+};
+</script>
+</body>
+</html>
